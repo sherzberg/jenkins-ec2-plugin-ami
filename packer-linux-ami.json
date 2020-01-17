@@ -3,7 +3,15 @@
     {
       "type": "amazon-ebs",
       "region": "us-east-2",
-      "source_ami": "ami-0bf3d772090752dc5",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
       "instance_type": "t2.large",
       "ssh_username": "ubuntu",
       "ami_name": "jenkins-agent-{{isotime \"2006-01-02T1504\"}}",
@@ -14,17 +22,24 @@
           "volume_type": "gp2",
           "delete_on_termination": true
         }
-      ]
+      ],
+      "tags": {
+        "Type": "jenkins-agent",
+        "OS_Version": "Ubuntu",
+        "Release": "16.04",
+        "Base_AMI_Name": "{{ .SourceAMIName }}",
+        "Extra": "{{ .SourceAMITags.TagName }}"
+      }
     }
   ],
   "provisioners": [
     {
       "type": "shell",
       "inline": [
+        "sudo add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main universe restricted multiverse\"",
         "sudo apt-get update",
         "sudo apt-get upgrade -y",
-        "sudo apt-get install -y python",
-        "sudo apt-get install -y git",
+        "sudo apt-get install -y git python-dev python-pip libssl-dev apt-transport-https ca-certificates lsb-release software-properties-common gnupg2",
         "sudo apt-get install -y cowsay",
         "sudo apt-get install -y openjdk-9-jdk-headless"
       ]
